@@ -1,0 +1,18 @@
+name: nend_plugin
+description: nend plugin that shows banner ads, interstitial ads and video ads.
+version: 0.0.3
+author: "F@N Communications, Inc. <ossdev@fancs.com>"
+homepage: https://github.com/fan-ADN
+
+environment:
+  sdk: ">=2.0.0-dev.68.0 <3.0.0"
+  flutter: ">=1.5.4-hotfix.2 <2.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+flutter:
+  plugin:
+    androidPackage: net.nend.nendplugin
+    pluginClass: NendPlugin
