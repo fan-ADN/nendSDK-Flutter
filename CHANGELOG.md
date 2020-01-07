@@ -1,3 +1,7 @@
+## 0.0.4
+
+- Update Android module dependencies
+
 ## 0.0.3
 
 - Added support for native ad

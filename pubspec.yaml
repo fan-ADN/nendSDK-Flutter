@@ -1,7 +1,7 @@
 name: nend_plugin
 description: nend plugin that shows banner ads, interstitial ads and video ads.
-version: 0.0.3
-author: "F@N Communications, Inc. <ossdev@fancs.com>"
+version: 0.0.4
+author: "FAN Communications, Inc. <ossdev@fancs.com>"
 homepage: https://github.com/fan-ADN
 
 environment:

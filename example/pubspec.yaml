@@ -1,5 +1,5 @@
 name: nend_plugin_example
-version: 0.0.3+0.0.3
+version: 0.0.4+0.0.4
 description: Demonstrates how to use the nend_plugin plugin.
 publish_to: 'none'
 
