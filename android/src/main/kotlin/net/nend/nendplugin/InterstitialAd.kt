@@ -1,103 +1,123 @@
 package net.nend.nendplugin
 
+import android.app.Activity
+import android.content.Context
+import io.flutter.plugin.common.BinaryMessenger
+import io.flutter.plugin.common.JSONMethodCodec
 import io.flutter.plugin.common.MethodCall
-import io.flutter.plugin.common.MethodChannel.Result
-import io.flutter.plugin.common.PluginRegistry
+import io.flutter.plugin.common.MethodChannel
 import net.nend.android.NendAdInterstitial
+import net.nend.android.NendAdInterstitial.NendAdInterstitialShowResult
+import net.nend.android.NendAdInterstitial.NendAdInterstitialStatusCode.FAILED_AD_DOWNLOAD
+import net.nend.android.NendAdInterstitial.NendAdInterstitialStatusCode.FAILED_AD_REQUEST
+import net.nend.android.NendAdInterstitial.NendAdInterstitialStatusCode.INVALID_RESPONSE_TYPE
+import net.nend.android.NendAdInterstitial.NendAdInterstitialStatusCode.SUCCESS
+import net.nend.nendplugin.ext.maybeBoolean
+import net.nend.nendplugin.ext.maybeInt
+import org.json.JSONObject
 
 
-class InterstitialAd(private var registrar: PluginRegistry.Registrar, arguments: Any) : AdBridger(registrar, NendPlugin.getMappingIdFrom(arguments)) {
-    private val interstitial: NendAdInterstitial = NendAdInterstitial()
-    private var lastLoadedSpotId: Int = 0
+class InterstitialAd(
+    private val activity: Activity?,
+    private val context: Context?,
+    messenger: BinaryMessenger?
+) : MethodChannel.MethodCallHandler, AdBridger(), NendAdInterstitial.OnClickListener {
 
-    companion object {
-        private const val defaultSpotId = -1
-    }
+    override val methodChannel =
+        MethodChannel(messenger, "nend_plugin/interstitial", JSONMethodCodec.INSTANCE)
 
     init {
+        methodChannel.setMethodCallHandler(this)
         registerListener()
     }
 
-    private fun registerListener() {
-        NendAdInterstitial.setListener(object : NendAdInterstitial.OnCompletionListenerSpot {
-            override fun onCompletion(p0: NendAdInterstitial.NendAdInterstitialStatusCode?) {
-            }
-
-            override fun onCompletion(status: NendAdInterstitial.NendAdInterstitialStatusCode?, spotId: Int) {
-                when (status) {
-                    NendAdInterstitial.NendAdInterstitialStatusCode.SUCCESS -> {
-                        invokeListenerEvent(CallbackName.OnLoaded, mapOf(NendPlugin.KEY_SPOT_ID to spotId.toString()))
-                    }
-                    else -> {
-                        invokeListenerEvent(CallbackName.OnFailedToLoad, mapOf(NendPlugin.KEY_SPOT_ID to spotId.toString(), KEY_ERROR_CODE to status!!.ordinal))
-                    }
-                }
-            }
-        })
-    }
-
-    private fun invokeListenerEvent(event: CallbackName, args: Map<String, Any>?) {
-        NendPlugin.channel.invokeMethod(getTag(interstitial) + "." + event.toString().decapitalize(), mappingArguments(mappingId, args))
-    }
-
-    override fun onMethodCall(call: MethodCall, result: Result) {
-        when (getMethod(call, getTag(interstitial))) {
-            MethodName.LoadAd -> {
-                val adUnit = NendPlugin.getAdUnitFrom(call.arguments)
-                lastLoadedSpotId = adUnit.second
-                NendAdInterstitial.loadAd(registrar.activity(), adUnit.third, lastLoadedSpotId)
-            }
-            MethodName.ShowAd -> {
-                var spotId = getSpotIdFrom(call.arguments)
-                if (spotId == defaultSpotId) {
-                    spotId = lastLoadedSpotId
-                }
-
-                val clickListener = object : NendAdInterstitial.OnClickListenerSpot {
-                    override fun onClick(clickType: NendAdInterstitial.NendAdInterstitialClickType?) {
-                    }
-
-                    override fun onClick(clickType: NendAdInterstitial.NendAdInterstitialClickType?, spotId: Int) {
-                        when (clickType) {
-                            NendAdInterstitial.NendAdInterstitialClickType.CLOSE -> {
-                                invokeListenerEvent(CallbackName.OnClosed, mapOf(NendPlugin.KEY_SPOT_ID to spotId.toString()))
-                            }
-                            NendAdInterstitial.NendAdInterstitialClickType.DOWNLOAD -> {
-                                invokeListenerEvent(CallbackName.OnAdClicked, mapOf(NendPlugin.KEY_SPOT_ID to spotId.toString()))
-                            }
-                            NendAdInterstitial.NendAdInterstitialClickType.INFORMATION -> {
-                                invokeListenerEvent(CallbackName.OnInformationClicked, mapOf(NendPlugin.KEY_SPOT_ID to spotId.toString()))
-                            }
-                        }
-                    }
-                }
-
-                val showResult = NendAdInterstitial.showAd(registrar.activity(), spotId, clickListener)
-                when (showResult) {
-                    NendAdInterstitial.NendAdInterstitialShowResult.AD_SHOW_SUCCESS -> {
-                        invokeListenerEvent(CallbackName.OnShown, mapOf(NendPlugin.KEY_SPOT_ID to spotId.toString()))
-                    }
-                    else -> {
-                        invokeListenerEvent(CallbackName.OnFailedToShow, mapOf(KEY_ERROR_CODE to showResult.ordinal, NendPlugin.KEY_SPOT_ID to spotId.toString()))
-                    }
-                }
-            }
-            MethodName.DismissAd -> {
-                NendAdInterstitial.dismissAd()
-            }
-            MethodName.IsEnableAutoReload -> {
-                NendAdInterstitial.isAutoReloadEnabled = NendPlugin.simplePickFrom(call.arguments, "enableAutoReload").toBoolean()
-            }
+    override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
+        when (targetMethod(call.method)) {
+            MethodName.LoadAd -> loadAd(call.arguments())
+            MethodName.ShowAd -> showAd(call.arguments())
+            MethodName.DismissAd -> dismissAd()
+            MethodName.EnableAutoReload -> enableAutoReload(call.arguments())
             else -> {
-                super.onMethodCall(call, result)
-                return
+                return result.notImplemented()
             }
         }
         result.success(true)
     }
 
-    private fun getSpotIdFrom(arguments: Any): Int {
-        return NendPlugin.simplePickFrom(arguments, "spotId").toInt()
+    private fun registerListener() {
+        NendAdInterstitial.setListener { status ->
+            when (status) {
+                SUCCESS -> {
+                    methodChannel.invokeListenerEvent(
+                        CallbackName.OnLoaded,
+                        mapOf(KEY_RESULT to "LOAD AD SUCCESS")
+                    )
+                }
+                FAILED_AD_DOWNLOAD, INVALID_RESPONSE_TYPE, FAILED_AD_REQUEST -> {
+                    methodChannel.invokeListenerEvent(
+                        CallbackName.OnFailedToLoad,
+                        mapOf(KEY_RESULT to status.name.replace("_", " "))
+                    )
+                }
+                else -> return@setListener
+            }
+        }
     }
 
+    private fun loadAd(arguments: JSONObject) {
+        val adUnit = AdUnit.fromArguments(arguments)
+        if (context != null && adUnit != null) {
+            adUnit.let { (spotId, apiKey) ->
+                NendAdInterstitial.loadAd(context, apiKey, spotId)
+            }
+        }
+    }
+
+    private fun showAd(arguments: JSONObject) {
+        val result = activity?.let { activity ->
+            arguments.maybeInt("spotId")?.let { spotId ->
+                NendAdInterstitial.showAd(activity, spotId, this)
+            }
+        }
+
+        result?.let { status ->
+            when (status) {
+                NendAdInterstitialShowResult.AD_SHOW_SUCCESS -> methodChannel.invokeListenerEvent(
+                    CallbackName.OnShown,
+                    mapOf(KEY_RESULT to "AD SHOW SUCCESS")
+                )
+                else -> methodChannel.invokeListenerEvent(
+                    CallbackName.OnFailedToShow, mapOf(KEY_RESULT to status.name.replace("_", " "))
+                )
+            }
+        }
+    }
+
+    private fun dismissAd() {
+        NendAdInterstitial.dismissAd()
+    }
+
+    private fun enableAutoReload(arguments: JSONObject) {
+        arguments.maybeBoolean("enableAutoReload")?.run {
+            NendAdInterstitial.isAutoReloadEnabled = this
+        }
+    }
+
+    override fun onClick(status: NendAdInterstitial.NendAdInterstitialClickType?) {
+        when (status) {
+            NendAdInterstitial.NendAdInterstitialClickType.DOWNLOAD -> methodChannel.invokeListenerEvent(
+                CallbackName.OnAdClicked,
+                null
+            )
+            NendAdInterstitial.NendAdInterstitialClickType.INFORMATION -> methodChannel.invokeListenerEvent(
+                CallbackName.OnInformationClicked,
+                null
+            )
+            NendAdInterstitial.NendAdInterstitialClickType.CLOSE -> methodChannel.invokeListenerEvent(
+                CallbackName.OnClosed,
+                null
+            )
+            else -> return
+        }
+    }
 }

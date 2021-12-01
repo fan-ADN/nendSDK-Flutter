@@ -1,62 +1,41 @@
 package net.nend.nendplugin
 
+import android.app.Activity
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel.Result
-import io.flutter.plugin.common.PluginRegistry.Registrar
 import net.nend.android.NendAdUserFeature
 import net.nend.android.NendAdVideo
 import org.json.JSONObject
 
-open class VideoAd<Ad : NendAdVideo>(private var registrar: Registrar, protected val adUnit: Triple<String, Int, String>): AdBridger(registrar, adUnit.first) {
+abstract class VideoAd<Ad : NendAdVideo>(private val activity: Activity?) : AdBridger() {
 
-    open lateinit var video: Ad
+    var video: Ad? = null
 
     override fun onMethodCall(call: MethodCall, result: Result) {
-        when (getMethod(call, getTag(video))) {
+        when (targetMethod(call.method)) {
             MethodName.IsReady -> {
-                result.success(video.isLoaded)
-                return
+                return result.success(video?.isLoaded)
             }
-            MethodName.LoadAd -> {
-                video.loadAd()
-            }
-            MethodName.ShowAd -> {
-                video.showAd(registrar.activity())
-            }
-            MethodName.ReleaseAd -> {
-                video.releaseAd()
-            }
-           MethodName.MediationName -> {
-                video.setMediationName(NendPlugin.simplePickFrom(call.arguments, "mediationName"))
-            }
-            MethodName.UserId -> {
-                video.setUserId(NendPlugin.simplePickFrom(call.arguments, "userId"))
-            }
-            MethodName.UserFeature -> {
-                video.setUserFeature(generateUserFeatureFrom(call.arguments))
-            }
-            MethodName.LocationEnabled -> {
-                video.setLocationEnabled(NendPlugin.simplePickFrom(call.arguments, "locationEnabled").toBoolean())
-            }
-            else -> {
-                super.onMethodCall(call, result)
-                return
-            }
+            MethodName.LoadAd -> video?.loadAd()
+            MethodName.ShowAd -> video?.showAd(activity)
+            MethodName.ReleaseAd -> video?.releaseAd()
+            MethodName.MediationName -> video?.setMediationName(call.argument("mediationName"))
+            MethodName.UserId -> video?.setUserId(call.argument("userId"))
+            MethodName.UserFeature -> video?.setUserFeature(generateUserFeatureFrom(call.arguments()))
+            else -> return
         }
         result.success(true)
     }
 
-    open fun invokeListenerEvent(event: CallbackName, args: Map<String, Any>?) {
-        NendPlugin.channel.invokeMethod(getTag(video) + "." + event.toString().decapitalize(), mappingArguments(mappingId, args))
-    }
+    abstract fun initAd(adUnit: AdUnit?)
 
-    private fun generateUserFeatureFrom(arguments: Any): NendAdUserFeature {
+    private fun generateUserFeatureFrom(arguments: JSONObject): NendAdUserFeature {
         val builder = NendAdUserFeature.Builder().apply {
-            (arguments as JSONObject).optJSONObject("userFeature")?.let { jsonObj ->
-                if (jsonObj.has("age")) {
-                    setAge(jsonObj.getInt("age"))
+            arguments.optJSONObject("userFeature")?.let { userFeature ->
+                if (userFeature.has("age")) {
+                    setAge(userFeature.getInt("age"))
                 }
-                if (jsonObj.has("gender")) jsonObj.getInt("gender").let {
+                if (userFeature.has("gender")) userFeature.getInt("gender").let {
                     when (it) {
                         1 -> setGender(NendAdUserFeature.Gender.MALE)
                         2 -> setGender(NendAdUserFeature.Gender.FEMALE)
@@ -64,23 +43,23 @@ open class VideoAd<Ad : NendAdVideo>(private var registrar: Registrar, protected
                         }
                     }
                 }
-                jsonObj.optJSONObject("birthday")?.let {
+                userFeature.optJSONObject("birthday")?.let {
                     setBirthday(
-                            it.getInt("year"),
-                            it.getInt("month"),
-                            it.getInt("day")
+                        it.getInt("year"),
+                        it.getInt("month"),
+                        it.getInt("day")
                     )
                 }
-                jsonObj.optJSONObject("customStringParams")?.let {
+                userFeature.optJSONObject("customStringParams")?.let {
                     parseCustomFeature(this, it)
                 }
-                jsonObj.optJSONObject("customIntegerParams")?.let {
+                userFeature.optJSONObject("customIntegerParams")?.let {
                     parseCustomFeature(this, it)
                 }
-                jsonObj.optJSONObject("customDoubleParams")?.let {
+                userFeature.optJSONObject("customDoubleParams")?.let {
                     parseCustomFeature(this, it)
                 }
-                jsonObj.optJSONObject("customBooleanParams")?.let {
+                userFeature.optJSONObject("customBooleanParams")?.let {
                     parseCustomFeature(this, it)
                 }
             }

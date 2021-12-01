@@ -8,83 +8,129 @@ import UIKit
 import Flutter
 import NendAd
 
-class InterstitialAd: AdBridger,
-    NADInterstitialDelegate
+class InterstitialAd:
+    AdBridger,
+    NADInterstitialLoadingDelegate,
+    NADInterstitialClickDelegate,
+    FlutterPlugin
 {
-    let KEY_SPOT_ID = "spotId"
-    var lastLoadedSpotId = 0
-    let defaultSpotId = -1
+    private var registrar: FlutterPluginRegistrar!
     
-    enum InterstitialStatusCode: Int {
-        case success = 0,
-        invalidResponseType,
-        failedAdRequest,
-        failedAdDownload = 4,
-        max
+    override init() {
+        super.init()
+        NADInterstitial.sharedInstance().clickDelegate = self
+        NADInterstitial.sharedInstance().loadingDelegate = self
     }
     
-    init(with param: InterstitialCodable, channel: FlutterMethodChannel) {
-        super.init(with: channel, tag: .interstitial, mappingId: param.mappingId)
-        NADInterstitial.sharedInstance().delegate = self
+    static func register(with registrar: FlutterPluginRegistrar) {
+        let instance = InterstitialAd()
+        instance.registrar = registrar
+        
+        instance.channel = FlutterMethodChannel(
+            name: "nend_plugin/interstitial",
+            binaryMessenger: registrar.messenger(),
+            codec: FlutterJSONMethodCodec.sharedInstance()
+        )
+        instance.channel.setMethodCallHandler({
+            (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
+            instance.handle(call, result: result)
+        })
+        registrar.addMethodCallDelegate(instance, channel: instance.channel)
     }
     
-    override func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        switch targetMethod(from: call) {
-        case .loadAd:
-            let adUnit = AdBridger.adUnit(from: call.arguments)
-            lastLoadedSpotId = adUnit.adUnit.spotId
-            NADInterstitial.sharedInstance().loadAd(withApiKey: adUnit.adUnit.apiKey, spotId: String(adUnit.adUnit.spotId))
-        case .showAd:
-            let spotId = InterstitialAd.adUnit(from: call.arguments).spotId == defaultSpotId ? lastLoadedSpotId : InterstitialAd.adUnit(from: call.arguments).spotId!
-            let showResult = (NADInterstitial.sharedInstance().showAd(from: rootViewController, spotId: String(spotId)))
-            switch showResult {
-            case .AD_SHOW_SUCCESS:
-                invokeDelegates(event: .onShown, args: [KEY_SPOT_ID : String(spotId)])
+    public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        switch targetMethod(call.method) {
+            case .showAd:
+                showAd(arguments: call.arguments)
+            case .loadAd:
+                loadAd(arguments: call.arguments)
+            case .dismissAd:
+                dismissAd()
+            case .enableAutoReload:
+                enableAutoReload(arguments: call.arguments)
             default:
-                invokeDelegates(event: .onFailedToShow, args: [KEY_ERROR_CODE : showResult.rawValue, KEY_SPOT_ID : String(spotId)])
-            }
-        case .dismissAd:
-            NADInterstitial.sharedInstance().dismissAd()
-        case .isEnableAutoReload:
-            NADInterstitial.sharedInstance().enableAutoReload = InterstitialAd.adUnit(from: call.arguments).enableAutoReload!
-        default:
-            super.handle(call, result: result)
-            return
+                return
         }
         result(true)
     }
     
-    class func adUnit(from argument: Any?) -> InterstitialCodable {
+    private func loadAd(arguments: Any?) {
+        let adUnit = self.adUnit(argument: arguments)
+        let spotId = adUnit.spotId
+        let apiKey = adUnit.apiKey
+        
+        NADInterstitial.sharedInstance().loadAd(withSpotID: spotId, apiKey: apiKey)
+    }
+    
+    private func showAd(arguments: Any?) {
+        guard let rootViewController = self.rootViewController else { return }
+        let codable = interstitialCodable(argument: arguments)
+        guard let spotId = codable.spotId else { return }
+        let showResult = NADInterstitial.sharedInstance().showAd(from: rootViewController, spotID: spotId)
+        var result: String?
+        switch showResult {
+            case .AD_SHOW_SUCCESS:
+                self.invokeMethod(CallbackName.onShown, arguments: ["result": "AD SHOW SUCCESS"])
+            case .AD_SHOW_ALREADY:
+                result = "AD SHOW ALREADY"
+            case .AD_LOAD_INCOMPLETE:
+                result = "AD LOAD INCOMPLETE"
+            case .AD_REQUEST_INCOMPLETE:
+                result = "AD REQUEST INCOMPLETE"
+            case .AD_DOWNLOAD_INCOMPLETE:
+                result = "AD DOWNLOAD INCOMPLETE"
+            case .AD_FREQUENCY_NOT_REACHABLE:
+                result = "AD FREQUENCY NOT REACHABLE"
+            case .AD_CANNOT_DISPLAY:
+                result = "AD CANNOT DISPLAY"
+        }
+        
+        if result != nil {
+            self.invokeMethod(CallbackName.onFailedToShow, arguments: ["result": result])
+        }
+    }
+    
+    private func dismissAd() {
+        NADInterstitial.sharedInstance().dismissAd()
+    }
+    
+    private func enableAutoReload(arguments: Any?) {
+        let codable = interstitialCodable(argument: arguments)
+        NADInterstitial.sharedInstance().enableAutoReload = codable.enableAutoReload ?? true
+    }
+    
+    private func interstitialCodable(argument: Any?) -> InterstitialCodable {
         let jsonData = try! JSONSerialization.data(withJSONObject: argument!, options: [])
         return try! JSONDecoder().decode(InterstitialCodable.self, from: jsonData)
     }
     
-    func didClick(with type: NADInterstitialClickType, spotId: String!) {
-        switch type {
-        case .DOWNLOAD:
-            invokeDelegates(event: .onAdClicked, args: [KEY_SPOT_ID : String(spotId)])
-        case .INFORMATION:
-            invokeDelegates(event: .onInformationClicked, args: [KEY_SPOT_ID : String(spotId)])
-        case .CLOSE:
-            invokeDelegates(event: .onClosed, args: [KEY_SPOT_ID : String(spotId)])
+    func didFinishLoadInterstitialAd(withStatus status: NADInterstitialStatusCode) {
+        var result: String?
+        switch status {
+            case .SUCCESS:
+                self.invokeMethod(.onLoaded, arguments: ["result": "LOAD AD SUCCESS"])
+            case .INVALID_RESPONSE_TYPE:
+                result = "INVALID RESPONSE TYPE"
+            case .FAILED_AD_REQUEST:
+                result = "FAILED AD REQUEST"
+            case .FAILED_AD_DOWNLOAD:
+                result = "FAILED AD DOWNLOAD"
+            default:
+                result = "FAILED AD REQUEST"
+        }
+        if result != nil {
+            self.invokeMethod(.onFailedToLoad, arguments: ["result": result])
         }
     }
     
-    func didFinishLoadInterstitialAd(withStatus status: NADInterstitialStatusCode, spotId: String!) {
-        var errorCode: InterstitialStatusCode
-        switch status {
-        case .SUCCESS:
-            invokeDelegates(event: .onLoaded, args: [KEY_SPOT_ID : String(spotId)])
-            return
-        case .INVALID_RESPONSE_TYPE:
-            errorCode = .invalidResponseType
-        case .FAILED_AD_REQUEST:
-            errorCode = .failedAdRequest
-        case .FAILED_AD_DOWNLOAD:
-            errorCode = .failedAdDownload
-        default:
-            errorCode = .failedAdRequest
+    func didClick(with type: NADInterstitialClickType) {
+        switch type {
+            case .DOWNLOAD:
+                self.invokeMethod(.onAdClicked, arguments: nil)
+            case .INFORMATION:
+                self.invokeMethod(.onInformationClicked, arguments: nil)
+            case .CLOSE:
+                self.invokeMethod(.onClosed, arguments: nil)
         }
-        invokeDelegates(event: .onFailedToLoad, args: [KEY_ERROR_CODE : String(errorCode.rawValue) , KEY_SPOT_ID : String(spotId)])
     }
 }

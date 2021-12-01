@@ -1,58 +1,114 @@
 package net.nend.nendplugin
 
-import io.flutter.plugin.common.PluginRegistry
+import android.app.Activity
+import android.content.Context
+import io.flutter.plugin.common.BinaryMessenger
+import io.flutter.plugin.common.JSONMethodCodec
+import io.flutter.plugin.common.MethodCall
+import io.flutter.plugin.common.MethodChannel
 import net.nend.android.NendAdRewardItem
-import net.nend.android.NendAdRewardedListener
+import net.nend.android.NendAdRewardedActionListener
 import net.nend.android.NendAdRewardedVideo
 import net.nend.android.NendAdVideo
+import net.nend.android.NendAdVideoActionListener
+import net.nend.android.NendAdVideoPlayingStateListener
+import net.nend.android.NendAdVideoType
+import java.util.Locale
 
-class RewardedVideoAd(registrar: PluginRegistry.Registrar, arguments: Any) : VideoAd<NendAdRewardedVideo>(registrar, NendPlugin.getAdUnitFrom(arguments)) {
+class RewardedVideoAd(
+    activity: Activity?,
+    private val context: Context?,
+    messenger: BinaryMessenger?
+) : MethodChannel.MethodCallHandler, VideoAd<NendAdRewardedVideo>(activity) {
+
+    override val methodChannel =
+        MethodChannel(messenger, "nend_plugin/NendAdRewardedVideo", JSONMethodCodec.INSTANCE)
+
     init {
-        video = NendAdRewardedVideo(registrar.context(), adUnit.second, adUnit.third)
-        video.setAdListener(object : NendAdRewardedListener {
-            override fun onRewarded(p0: NendAdVideo, p1: NendAdRewardItem) {
-                val reward = mapOf("currencyAmount" to p1.currencyAmount, "currencyName" to p1.currencyName)
-                invokeListenerEvent(CallbackName.OnRewarded, mapOf("reward" to reward))
+        methodChannel.setMethodCallHandler(this)
+    }
+
+    override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
+        when (targetMethod(call.method)) {
+            MethodName.InitAd -> {
+                val adUnit = AdUnit.fromArguments(call.arguments())
+                initAd(adUnit)
+                result.success(true)
+            }
+            else -> super.onMethodCall(call, result)
+        }
+    }
+
+    override fun initAd(adUnit: AdUnit?) {
+        adUnit?.let { (spotId, apiKey) ->
+            video = NendAdRewardedVideo(context, spotId, apiKey)
+            registerListener()
+        }
+    }
+
+    private fun registerListener() {
+        video?.setActionListener(object : NendAdVideoActionListener, NendAdRewardedActionListener {
+            override fun onRewarded(p0: NendAdVideo, reward: NendAdRewardItem) {
+                methodChannel.invokeListenerEvent(
+                    CallbackName.OnRewarded,
+                    mapOf(
+                        "reward" to mapOf(
+                            "name" to reward.currencyName,
+                            "amount" to reward.currencyAmount
+                        )
+                    )
+                )
             }
 
-            override fun onLoaded(p0: NendAdVideo) {
-                invokeListenerEvent(CallbackName.OnLoaded, null)
+            override fun onLoaded(videoAd: NendAdVideo) {
+                when (videoAd.type) {
+                    NendAdVideoType.NORMAL -> videoAd.playingState()?.let {
+                        it.playingStateListener = object : NendAdVideoPlayingStateListener {
+                            override fun onStarted(p0: NendAdVideo) {
+                                methodChannel.invokeListenerEvent(CallbackName.OnStarted, null)
+                            }
+
+                            override fun onStopped(p0: NendAdVideo) {
+                                methodChannel.invokeListenerEvent(CallbackName.OnStopped, null)
+                            }
+
+                            override fun onCompleted(p0: NendAdVideo) {
+                                methodChannel.invokeListenerEvent(CallbackName.OnCompleted, null)
+                            }
+                        }
+                    }
+                    else -> {
+                    }
+                }
+                methodChannel.invokeListenerEvent(CallbackName.OnLoaded, null)
+                methodChannel.invokeListenerEvent(
+                    CallbackName.OnDetectedVideoType,
+                    mapOf("type" to videoAd.type.toString().toLowerCase(Locale.ROOT))
+                )
             }
 
             override fun onFailedToLoad(p0: NendAdVideo, p1: Int) {
-                invokeListenerEvent(CallbackName.OnFailedToLoad, mapOf(KEY_ERROR_CODE to p1))
+                methodChannel.invokeListenerEvent(CallbackName.OnFailedToLoad, null)
             }
 
             override fun onFailedToPlay(p0: NendAdVideo) {
-                invokeListenerEvent(CallbackName.OnFailedToPlay, null)
+                methodChannel.invokeListenerEvent(CallbackName.OnFailedToPlay, null)
             }
 
             override fun onShown(p0: NendAdVideo) {
-                invokeListenerEvent(CallbackName.OnShown, null)
-            }
-
-            override fun onStarted(p0: NendAdVideo) {
-                invokeListenerEvent(CallbackName.OnStarted, null)
-            }
-
-            override fun onStopped(p0: NendAdVideo) {
-                invokeListenerEvent(CallbackName.OnStopped, null)
-            }
-
-            override fun onCompleted(p0: NendAdVideo) {
-                invokeListenerEvent(CallbackName.OnCompleted, null)
-            }
-
-            override fun onInformationClicked(p0: NendAdVideo) {
-                invokeListenerEvent(CallbackName.OnInformationClicked, null)
-            }
-
-            override fun onAdClicked(p0: NendAdVideo) {
-                invokeListenerEvent(CallbackName.OnAdClicked, null)
+                methodChannel.invokeListenerEvent(CallbackName.OnShown, null)
             }
 
             override fun onClosed(p0: NendAdVideo) {
-                invokeListenerEvent(CallbackName.OnClosed, null)
+                methodChannel.invokeListenerEvent(CallbackName.OnClosed, null)
+            }
+
+            override fun onAdClicked(p0: NendAdVideo) {
+                methodChannel.invokeListenerEvent(CallbackName.OnAdClicked, null)
+            }
+
+            override fun onInformationClicked(p0: NendAdVideo) {
+                methodChannel.invokeListenerEvent(CallbackName.OnInformationClicked, null)
             }
         })
     }

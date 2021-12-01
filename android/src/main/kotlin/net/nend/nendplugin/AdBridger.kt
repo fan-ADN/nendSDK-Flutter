@@ -1,44 +1,31 @@
 package net.nend.nendplugin
 
-import android.app.Activity
-import android.util.Log
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
-import io.flutter.plugin.common.PluginRegistry
+import java.util.Locale
 
-const val KEY_ERROR_CODE = "errorCode"
+abstract class AdBridger {
 
-open class AdBridger(registrar: PluginRegistry.Registrar, val mappingId: String) {
-    val activity: Activity? = registrar.activity()
-
-    protected fun getTag(by: Any): String {
-        return by.javaClass.simpleName
-    }
-
-    protected fun getMethod(call: MethodCall, tag: String): MethodName =
-            MethodName.valueOf(call.method.replace("$tag.", "").capitalize())
-
-    protected fun mappingArguments(mappingId: String, args: Map<String, Any>?): Map<String, Any> {
-        if (args == null) {
-            return mapOf(NendPlugin.KEY_MAPPING_ID to mappingId)
-        }
-        if (args[NendPlugin.KEY_MAPPING_ID] != null) {
-            Log.e(NendPlugin.TAG, "${NendPlugin.KEY_MAPPING_ID} is reserved key for mapping arguments...")
-            throw RuntimeException()
-        }
-        val map = args.toMutableMap()
-        map[NendPlugin.KEY_MAPPING_ID] = mappingId
-        return map
-    }
+    abstract val methodChannel: MethodChannel
 
     open fun onMethodCall(call: MethodCall, result: MethodChannel.Result) = result.notImplemented()
+
+    fun MethodChannel.invokeListenerEvent(event: CallbackName, args: Map<String, Any>?) {
+        this.invokeMethod(
+            event.toString().decapitalize(Locale.ROOT),
+            args
+        )
+    }
+
+    protected fun targetMethod(method: String): MethodName {
+        return MethodName.valueOf(method.capitalize(Locale.ROOT))
+    }
 
     enum class MethodName {
         LoadAd,
         ReleaseAd,
         ShowAd,
         HideAd,
-        Layout,
         // Common definitions are above here.
 
         Resume,
@@ -49,17 +36,13 @@ open class AdBridger(registrar: PluginRegistry.Registrar, val mappingId: String)
         UserId,
         UserFeature,
         AddFallbackFullboard,
-        IsEnableAutoReload,
         EnableAutoReload,
-        DisableAutoReload,
         DismissAd,
-        LocationEnabled,
         MuteStartPlaying,
 
-        PerformAdClick,
-        PerformInformationClick,
-        Activate,
         // Specific definitions are above here.
+        InitAd,
+        SetLogLevel,
     }
 
     enum class CallbackName {
@@ -77,6 +60,11 @@ open class AdBridger(registrar: PluginRegistry.Registrar, val mappingId: String)
         OnCompleted,
         OnRewarded,
         OnFailedToShow,
+        OnDetectedVideoType,
         // Specific definitions are above here.
+    }
+
+    companion object {
+        const val KEY_RESULT = "result"
     }
 }

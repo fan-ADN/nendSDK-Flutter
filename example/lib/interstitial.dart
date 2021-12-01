@@ -2,162 +2,119 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-import 'package:nend_plugin/interstitial.dart';
-import 'main.dart';
+import 'package:nend_plugin/nend_plugin.dart';
 
-const menu = [
-  'Load',
-  'Load2',
-  'Show',
-  'Show with spotID',
-  'Show with spotID2',
-  'Dismiss',
-  'AutoReload enabled',
-  'AutoReload disabled',
-  'Set Listenr1',
-  'Set Listenr2',
-];
-
-class Interstitial extends StatefulWidget {
+class InterstitialSample extends StatefulWidget {
   @override
-  _InterstitialState createState() => new _InterstitialState();
+  _InterstitialSampleState createState() => _InterstitialSampleState();
 }
 
-class _InterstitialState extends State<Interstitial> {
-  String _interstitialState = 'Interstitial';
-  InterstitialAd _interstitial;
+class _InterstitialSampleState extends State<InterstitialSample> {
+  late InterstitialAd _interstitial;
 
-  int get spotId => (Platform.isAndroid ? 213206 : 213208);
-  String get apiKey => (Platform.isAndroid
-      ? "8c278673ac6f676dae60a1f56d16dad122e23516"
-      : "308c2499c75c4a192f03c02b2fcebd16dcb45cc9");
+  int get spotId => Platform.isAndroid ? 213206 : 213208;
+  String get apiKey => Platform.isAndroid
+      ? '8c278673ac6f676dae60a1f56d16dad122e23516'
+      : '308c2499c75c4a192f03c02b2fcebd16dcb45cc9';
 
-  int get spotId2 => (Platform.isAndroid ? 213206 : 213208);
-  String get apiKey2 => (Platform.isAndroid
-      ? "8c278673ac6f676dae60a1f56d16dad122e23516"
-      : "308c2499c75c4a192f03c02b2fcebd16dcb45cc9");
+  int get spotId2 => Platform.isAndroid ? 213206 : 213208;
+  String get apiKey2 => Platform.isAndroid
+      ? '8c278673ac6f676dae60a1f56d16dad122e23516'
+      : '308c2499c75c4a192f03c02b2fcebd16dcb45cc9';
+
+  bool needAutoReload = true;
 
   @override
   void initState() {
     super.initState();
     _interstitial = InterstitialAd();
+    _interstitial.setEventListener(_listener());
   }
 
   @override
   Widget build(BuildContext context) {
-    List<Widget> children = List<Widget>();
-
-    children.add(new ListView.builder(
-      key: Key('menu_list'),
-      padding: EdgeInsets.all(8.0),
-      itemExtent: 44.0,
-      itemCount: menu.length,
-      itemBuilder: (BuildContext context, int index) {
-        return GestureDetector(
-          key: Key(menu[index]),
-          child: Text(menu[index]),
-          onTapUp: (details) {
-            setState(() {
-              switch (menu[index]) {
-                case 'Load':
-                  _interstitial.load(spotId, apiKey);
-                  break;
-                case 'Load2':
-                  _interstitial.load(spotId2, apiKey2);
-                  break;
-                case 'Show':
-                  _interstitial.show();
-                  break;
-                case 'Show with spotID':
-                  _interstitial.show(spotId);
-                  break;
-                case 'Show with spotID2':
-                  _interstitial.show(spotId2);
-                  break;
-                case 'Dismiss':
-                  dismiss();
-                  break;
-                case 'AutoReload enabled':
-                  _interstitial.enableAutoReload = true;
-                  break;
-                case 'AutoReload disabled':
-                  _interstitial.enableAutoReload = false;
-                  break;
-                case 'Set Listenr1':
-                  print('Set Listener1');
-                  _interstitial.listener =
-                      ((InterstitialAdEvent event, int spotId,
-                          {int errorCode}) {
-                    setState(() {
-                      if (errorCode == null) {
-                        print('Listener1 ' +
-                            event.toString() +
-                            ' SpotID = ' +
-                            spotId.toString());
-                      } else {
-                        print('Listener1 ' +
-                            event.toString() +
-                            ' SpotID = ' +
-                            spotId.toString() +
-                            " error :" +
-                            errorCode.toString());
-                      }
-                      _interstitialState = event.toString();
-                    });
-                  });
-                  break;
-                case 'Set Listenr2':
-                  print('Set Listener2');
-                  _interstitial.listener =
-                      ((InterstitialAdEvent event, int spotId,
-                          {int errorCode}) {
-                    setState(() {
-                      if (errorCode == null) {
-                        print('Listener2 ' +
-                            event.toString() +
-                            ' SpotID = ' +
-                            spotId.toString());
-                      } else {
-                        print('Listener2 ' +
-                            event.toString() +
-                            ' SpotID = ' +
-                            spotId.toString() +
-                            " error :" +
-                            errorCode.toString());
-                      }
-                      _interstitialState = event.toString();
-                    });
-                  });
-                  break;
-                default:
-                  break;
-              }
-            });
-          },
-        );
-      },
-    ));
-
-    children.add(new StateDisplay(
-      title: 'StateDisplay',
-      state: _interstitialState,
-      color: Colors.black,
-    ));
-
-    return new Scaffold(
-        appBar: new AppBar(
-          title: const Text('Interstitial example'),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Interstitial example'),
+      ),
+      body: SafeArea(
+        child: ListView(
+          children: [
+            TextButton(
+              onPressed: () =>
+                  _interstitial.loadAd(spotId: spotId, apiKey: apiKey),
+              child: Text('Load: type 1'),
+            ),
+            TextButton(
+              onPressed: () => _interstitial.showAd(spotId: spotId),
+              child: Text('Show type 1'),
+            ),
+            TextButton(
+              onPressed: () =>
+                  _interstitial.loadAd(spotId: spotId2, apiKey: apiKey2),
+              child: Text('Load: type 2'),
+            ),
+            TextButton(
+              onPressed: () => _interstitial.showAd(spotId: spotId2),
+              child: Text('Show type 2'),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  needAutoReload = !needAutoReload;
+                  _interstitial.enableAutoReload(isEnabled: needAutoReload);
+                });
+              },
+              child: Text(
+                needAutoReload ? 'Disable Auto Reload' : 'Enable Auto Reload',
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                // Need set false for enableAutoReload when before call dismissAd method.
+                // If didn't set false, it will crash your app.
+                await _interstitial.enableAutoReload(isEnabled: false);
+                await Future.delayed(Duration(seconds: 5));
+                _interstitial.dismissAd();
+                await _interstitial.enableAutoReload(isEnabled: needAutoReload);
+              },
+              child: Text('Test dismissAd'),
+            ),
+            Text(
+              'How to test for dismissAd method',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            ),
+            Text('Step 1: Tap to Load button'),
+            Text('Step 2: Tap to Test dismissAd button'),
+            Text('Step 3: Tap to Show button'),
+            Text('Step 4: Wait for a few seconds'),
+            Text('Step 5: Will be closed interstitial Ads to automatically'),
+          ],
         ),
-        body: SafeArea(
-          child: new Stack(
-            alignment: Alignment.bottomCenter,
-            children: children,
-          ),
-        ));
+      ),
+    );
   }
 
-  void dismiss() async {
-    await new Future.delayed(
-        const Duration(seconds: 5), () => _interstitial.dismiss());
+  InterstitialAdListener _listener() {
+    return InterstitialAdListener(
+      onShown: (Object? arg) {
+        print((arg as Map)['result']);
+      },
+      onFailedToShow: (Object? arg) {
+        print((arg as Map)['result']);
+      },
+      onLoaded: (Object? arg) {
+        print((arg as Map)['result']);
+      },
+      onFailedToLoad: (Object? arg) {
+        print((arg as Map)['result']);
+      },
+      onAdClicked: () => print('onAdClicked'),
+      onInformationClicked: () => print('onInformationClicked'),
+      onClosed: () => print('onClosed'),
+    );
   }
 }

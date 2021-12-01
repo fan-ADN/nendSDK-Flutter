@@ -1,5 +1,5 @@
 //
-//  NendAdVideo.swift
+//  VideoAd.swift
 //  nend_plugin
 //
 //
@@ -9,32 +9,41 @@ import Flutter
 import NendAd
 
 class VideoAd: AdBridger {
-    let video: NADVideo
-
-    init(with tag: SwiftNendPlugin.ClassNameTag, param: AdUnitCodable, video: NADVideo, channel: FlutterMethodChannel) {
-        self.video = video
-        super.init(with: channel, tag: tag, mappingId: param.mappingId)
-    }
     
-    override func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        switch targetMethod(from: call) {
-        case .isReady: return result(video.isReady)
-        case .loadAd: video.loadAd()
-        case .showAd: video.showAd(from: rootViewController)
-        case .releaseAd: video.releaseAd()
-        case .mediationName:
-            video.mediationName = videoCodable(from: call.arguments)?.mediationName ?? ""
-        case .userId:
-            video.userId = videoCodable(from: call.arguments)?.userId ?? ""
-        case .userFeature:
-            video.userFeature = generateFeature(from: videoCodable(from: call.arguments))
-        case .locationEnabled:
-            video.isLocationEnabled = videoCodable(from: call.arguments)?.locationEnabled ?? true
-        default:
-            super.handle(call, result: result)
-            return
+    var video: NADVideo!
+    
+    func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        switch targetMethod(call.method) {
+            case .isReady: return result(video.isReady)
+            case .loadAd: loadAd()
+            case .showAd: showAd()
+            case .releaseAd: video.releaseAd()
+            case .mediationName:
+                video.mediationName = videoCodable(from: call.arguments)?.mediationName ?? ""
+            case .userId:
+                video.userId = videoCodable(from: call.arguments)?.userId ?? ""
+            case .userFeature:
+                video.userFeature = generateFeature(from: videoCodable(from: call.arguments))
+            default:
+                return
         }
         result(true)
+    }
+    
+    func loadAd() {
+        if video != nil {
+            video.loadAd()
+        }
+    }
+    
+    private func showAd() {
+        guard let rootViewController = self.rootViewController else { return }
+        video.showAd(from: rootViewController)
+    }
+    
+    func adUnit(from argument: Any?) -> AdUnit {
+        let jsonData = try! JSONSerialization.data(withJSONObject: argument!, options: [])
+        return try! JSONDecoder().decode(AdUnit.self, from: jsonData)
     }
     
     func videoCodable(from argument: Any?) -> VideoCodable? {

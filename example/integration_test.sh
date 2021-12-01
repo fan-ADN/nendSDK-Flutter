@@ -27,7 +27,3 @@ flutterUITest integration_adjust_banner # flutter drive --target=test_driver/int
 
 # # Interstitial
 flutterUITest integration_interstitial # flutter drive --target=test_driver/integration_interstitial.dart
-
-# # Native Ad
-flutterUITest integration_native_simple # flutter drive --target=test_driver/integration_native_simple.dart
-flutterUITest integration_native_positioned # flutter drive --target=test_driver/integration_native_positioned.dart

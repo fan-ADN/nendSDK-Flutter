@@ -3,21 +3,21 @@ import 'package:test/test.dart';
 
 void main() {
   group('executing asjust banner test', () {
-    FlutterDriver driver;
+    FlutterDriver? driver;
 
     setUpAll(() async {
       // Connects to the app
       driver = await FlutterDriver.connect();
       SerializableFinder banner = find.byValueKey('Banner(adjust mode)');
-      await driver.tap(banner);
+      await driver!.tap(banner);
       await Future<void>.delayed(Duration(seconds: 1));
     });
 
     tearDownAll(() async {
       if (driver != null) {
-        await driver.tap(find.pageBack());
+        await driver!.tap(find.pageBack());
         // Closes the connection
-        driver.close();
+        driver!.close();
       }
     });
 
@@ -25,39 +25,39 @@ void main() {
       await Future<void>.delayed(Duration(seconds: 1));
 
       var menu = 'type320x100';
-      await driver.tap(find.byValueKey('PopupMenuButton'));
-      await driver.tap(find.byValueKey(menu));
+      await driver!.tap(find.byValueKey('PopupMenuButton'));
+      await driver!.tap(find.byValueKey(menu));
 
-      await driver.tap(find.byValueKey('Show'));
+      await driver!.tap(find.byValueKey('Show'));
       await Future<void>.delayed(Duration(seconds: 2));
-      await driver.tap(find.byValueKey('Hide'));
+      await driver!.tap(find.byValueKey('Hide'));
       await Future<void>.delayed(Duration(seconds: 2));
 
       menu = 'type300x100';
-      await driver.tap(find.byValueKey('PopupMenuButton'));
-      await driver.tap(find.byValueKey(menu));
+      await driver!.tap(find.byValueKey('PopupMenuButton'));
+      await driver!.tap(find.byValueKey(menu));
 
-      await driver.tap(find.byValueKey('Show'));
+      await driver!.tap(find.byValueKey('Show'));
       await Future<void>.delayed(Duration(seconds: 2));
-      await driver.tap(find.byValueKey('Hide'));
+      await driver!.tap(find.byValueKey('Hide'));
       await Future<void>.delayed(Duration(seconds: 2));
 
       menu = 'type300x250';
-      await driver.tap(find.byValueKey('PopupMenuButton'));
-      await driver.tap(find.byValueKey(menu));
+      await driver!.tap(find.byValueKey('PopupMenuButton'));
+      await driver!.tap(find.byValueKey(menu));
 
-      await driver.tap(find.byValueKey('Show'));
+      await driver!.tap(find.byValueKey('Show'));
       await Future<void>.delayed(Duration(seconds: 2));
-      await driver.tap(find.byValueKey('Hide'));
+      await driver!.tap(find.byValueKey('Hide'));
       await Future<void>.delayed(Duration(seconds: 2));
 
       menu = 'type320x50';
-      await driver.tap(find.byValueKey('PopupMenuButton'));
-      await driver.tap(find.byValueKey(menu));
+      await driver!.tap(find.byValueKey('PopupMenuButton'));
+      await driver!.tap(find.byValueKey(menu));
 
-      await driver.tap(find.byValueKey('Show'));
+      await driver!.tap(find.byValueKey('Show'));
       await Future<void>.delayed(Duration(seconds: 2));
-      await driver.tap(find.byValueKey('Hide'));
+      await driver!.tap(find.byValueKey('Hide'));
       await Future<void>.delayed(Duration(seconds: 2));
     });
 

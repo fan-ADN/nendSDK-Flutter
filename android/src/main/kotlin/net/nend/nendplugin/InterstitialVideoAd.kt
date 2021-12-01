@@ -1,71 +1,114 @@
 package net.nend.nendplugin
 
+import android.app.Activity
+import android.content.Context
+import io.flutter.plugin.common.BinaryMessenger
+import io.flutter.plugin.common.JSONMethodCodec
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
-import io.flutter.plugin.common.PluginRegistry
 import net.nend.android.NendAdInterstitialVideo
 import net.nend.android.NendAdVideo
-import net.nend.android.NendAdVideoListener
+import net.nend.android.NendAdVideoActionListener
+import net.nend.android.NendAdVideoPlayingStateListener
+import net.nend.android.NendAdVideoType
+import java.util.Locale
 
-class InterstitialVideoAd(registrar: PluginRegistry.Registrar, arguments: Any) : VideoAd<NendAdInterstitialVideo>(registrar, NendPlugin.getAdUnitFrom(arguments)) {
+class InterstitialVideoAd(
+    activity: Activity?,
+    private val context: Context?,
+    messenger: BinaryMessenger?
+) : MethodChannel.MethodCallHandler, VideoAd<NendAdInterstitialVideo>(activity) {
+
+    override val methodChannel =
+        MethodChannel(messenger, "nend_plugin/NendAdInterstitialVideo", JSONMethodCodec.INSTANCE)
+
     init {
-        video = NendAdInterstitialVideo(registrar.context(), adUnit.second, adUnit.third)
-        video.setAdListener(object : NendAdVideoListener {
-            override fun onLoaded(p0: NendAdVideo) {
-                invokeListenerEvent(CallbackName.OnLoaded, null)
-            }
-
-            override fun onFailedToLoad(p0: NendAdVideo, p1: Int) {
-                invokeListenerEvent(CallbackName.OnFailedToLoad, mapOf(KEY_ERROR_CODE to p1))
-            }
-
-            override fun onFailedToPlay(p0: NendAdVideo) {
-                invokeListenerEvent(CallbackName.OnFailedToPlay, null)
-            }
-
-            override fun onShown(p0: NendAdVideo) {
-                invokeListenerEvent(CallbackName.OnShown, null)
-            }
-
-            override fun onStarted(p0: NendAdVideo) {
-                invokeListenerEvent(CallbackName.OnStarted, null)
-            }
-
-            override fun onStopped(p0: NendAdVideo) {
-                invokeListenerEvent(CallbackName.OnStopped, null)
-            }
-
-            override fun onCompleted(p0: NendAdVideo) {
-                invokeListenerEvent(CallbackName.OnCompleted, null)
-            }
-
-            override fun onInformationClicked(p0: NendAdVideo) {
-                invokeListenerEvent(CallbackName.OnInformationClicked, null)
-            }
-
-            override fun onAdClicked(p0: NendAdVideo) {
-                invokeListenerEvent(CallbackName.OnAdClicked, null)
-            }
-
-            override fun onClosed(p0: NendAdVideo) {
-                invokeListenerEvent(CallbackName.OnClosed, null)
-            }
-        })
+        methodChannel.setMethodCallHandler(this)
     }
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
-        when (getMethod(call, getTag(video))) {
+        when (targetMethod(call.method)) {
+            MethodName.InitAd -> {
+                val adUnit = AdUnit.fromArguments(call.arguments())
+                initAd(adUnit)
+                result.success(true)
+            }
             MethodName.AddFallbackFullboard -> {
-                val fallbackUnit = NendPlugin.getAdUnitFrom(call.arguments)
-                video.addFallbackFullboard(fallbackUnit.second, fallbackUnit.third)
-                result.success(null)
+                val adUnit = AdUnit.fromArguments(call.arguments())
+                adUnit?.let { (spotId, apiKey) ->
+                    video?.addFallbackFullboard(spotId, apiKey)
+                }
+                result.success(true)
             }
             MethodName.MuteStartPlaying -> {
-                video.isMuteStartPlaying = NendPlugin.simplePickFrom(call.arguments, "muteStartPlaying").toBoolean()
+                call.argument<Boolean?>("muteStartPlaying")?.let {
+                    video?.isMuteStartPlaying = it
+                }
+                result.success(true)
             }
-            else -> {
-                super.onMethodCall(call, result)
-            }
+            else -> super.onMethodCall(call, result)
         }
+    }
+
+    override fun initAd(adUnit: AdUnit?) {
+        adUnit?.let { (spotId, apiKey) ->
+            video = NendAdInterstitialVideo(context, spotId, apiKey)
+            registerListener()
+        }
+    }
+
+    private fun registerListener() {
+        video?.setActionListener(object : NendAdVideoActionListener {
+            override fun onLoaded(videoAd: NendAdVideo) {
+                when (videoAd.type) {
+                    NendAdVideoType.NORMAL -> videoAd.playingState()?.let {
+                        it.playingStateListener = object : NendAdVideoPlayingStateListener {
+                            override fun onStarted(p0: NendAdVideo) {
+                                methodChannel.invokeListenerEvent(CallbackName.OnStarted, null)
+                            }
+
+                            override fun onStopped(p0: NendAdVideo) {
+                                methodChannel.invokeListenerEvent(CallbackName.OnStopped, null)
+                            }
+
+                            override fun onCompleted(p0: NendAdVideo) {
+                                methodChannel.invokeListenerEvent(CallbackName.OnCompleted, null)
+                            }
+                        }
+                    }
+                    else -> {
+                    }
+                }
+                methodChannel.invokeListenerEvent(CallbackName.OnLoaded, null)
+                methodChannel.invokeListenerEvent(
+                    CallbackName.OnDetectedVideoType,
+                    mapOf("type" to videoAd.type.toString().toLowerCase(Locale.ROOT))
+                )
+            }
+
+            override fun onFailedToLoad(p0: NendAdVideo, p1: Int) {
+                methodChannel.invokeListenerEvent(CallbackName.OnFailedToLoad, null)
+            }
+
+            override fun onFailedToPlay(p0: NendAdVideo) {
+                methodChannel.invokeListenerEvent(CallbackName.OnFailedToPlay, null)
+            }
+
+            override fun onShown(p0: NendAdVideo) {
+                methodChannel.invokeListenerEvent(CallbackName.OnShown, null)
+            }
+
+            override fun onClosed(p0: NendAdVideo) {
+                methodChannel.invokeListenerEvent(CallbackName.OnClosed, null)
+            }
+
+            override fun onAdClicked(p0: NendAdVideo) {
+                methodChannel.invokeListenerEvent(CallbackName.OnAdClicked, null)
+            }
+
+            override fun onInformationClicked(p0: NendAdVideo) {
+                methodChannel.invokeListenerEvent(CallbackName.OnInformationClicked, null)
+            }
+        })
     }
 }
