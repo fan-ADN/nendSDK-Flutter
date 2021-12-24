@@ -71,12 +71,8 @@ class _InterstitialSampleState extends State<InterstitialSample> {
             ),
             TextButton(
               onPressed: () async {
-                // Need set false for enableAutoReload when before call dismissAd method.
-                // If didn't set false, it will crash your app.
-                await _interstitial.enableAutoReload(isEnabled: false);
                 await Future.delayed(Duration(seconds: 5));
                 _interstitial.dismissAd();
-                await _interstitial.enableAutoReload(isEnabled: needAutoReload);
               },
               child: Text('Test dismissAd'),
             ),

@@ -1,3 +1,6 @@
+## 1.0.1
+- Bump up nendSDK_iOS to 7.1.0.
+
 ## 1.0.0
 - Added support for null-safety.
 - BannerAd, InterstitialAd, and VideoAd have been reimplemented.

@@ -11,7 +11,7 @@
 Add this to your package's `pubspec.yaml` file and execute `flutter pub get`:
 ```Dart
 dependencies:
-  nend_plugin: ^1.0.0
+  nend_plugin: ^1.0.1
 ```
 ## Preparation
 Go to [nend admin page](https://www.nend.net/admin/login). Create ad space and obtain **apiKey**, **spotId**.
@@ -79,7 +79,7 @@ bannerSize: BannerSize.type320x50
 |type728x90|728 x 90|
 
 ### BannerAd API
-BannerAdController will be returned when created BannerAd (onCreated). 
+BannerAdController will be returned when created BannerAd (onCreated).
 You can controll BannerAd by using the instance.
 The following APIs are available.
 ```Dart
@@ -134,7 +134,7 @@ class BannerAdListener {
 }
 ```
 ## InterstitialAd
-Since InterstitialAd is displayed on Native View, it is not necessary to add to WidgetTree. 
+Since InterstitialAd is displayed on Native View, it is not necessary to add to WidgetTree.
 This class implemented with a singleton pattern.
 
 ### Example
@@ -190,7 +190,7 @@ class InterstitialAdListener {
   /// onShown: (Object? arg) {
   ///   print((arg as Map)['result']);
   /// },
-  /// ``` 
+  /// ```
   final AdEventCallBackUseArgument? onShown;
 
   /// Called when display failed.
@@ -210,7 +210,7 @@ class InterstitialAdListener {
   /// onLoaded: (Object? arg) {
   ///   print((arg as Map)['result']);
   /// },
-  /// ``` 
+  /// ```
   final AdEventCallBackUseArgument? onLoaded;
 
   /// Called when load failed.
@@ -234,8 +234,8 @@ class InterstitialAdListener {
 }
 ```
 ## InterstitialVideoAd
-Since InterstitialVideoAd is displayed on Native View, it is not necessary to add to WidgetTree. 
-This class implemented with a singleton pattern. 
+Since InterstitialVideoAd is displayed on Native View, it is not necessary to add to WidgetTree.
+This class implemented with a singleton pattern.
 ### Example
 ```Dart
 InterstitialVideoAd? interstitialVideoAd;
@@ -356,8 +356,8 @@ class InterstitialVideoAdListener {
 }
 ```
 ## RewardedVideoAd
-Since RewardedVideoAd is displayed on Native View, It is not necessary to add to WidgetTree. 
-This class implemented with a singleton pattern. 
+Since RewardedVideoAd is displayed on Native View, It is not necessary to add to WidgetTree.
+This class implemented with a singleton pattern.
 ### Example
 ```Dart
 RewardedVideoAd? rewardedVideo;
