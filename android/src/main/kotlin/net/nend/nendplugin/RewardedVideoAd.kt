@@ -13,12 +13,13 @@ import net.nend.android.NendAdVideo
 import net.nend.android.NendAdVideoActionListener
 import net.nend.android.NendAdVideoPlayingStateListener
 import net.nend.android.NendAdVideoType
+import org.json.JSONObject
 import java.util.Locale
 
 class RewardedVideoAd(
     activity: Activity?,
     private val context: Context?,
-    messenger: BinaryMessenger?
+    messenger: BinaryMessenger
 ) : MethodChannel.MethodCallHandler, VideoAd<NendAdRewardedVideo>(activity) {
 
     override val methodChannel =
@@ -31,9 +32,11 @@ class RewardedVideoAd(
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (targetMethod(call.method)) {
             MethodName.InitAd -> {
-                val adUnit = AdUnit.fromArguments(call.arguments())
-                initAd(adUnit)
-                result.success(true)
+                call.arguments<JSONObject?>()?.let {
+                    val adUnit = AdUnit.fromArguments(it)
+                    initAd(adUnit)
+                    result.success(true)
+                }
             }
             else -> super.onMethodCall(call, result)
         }

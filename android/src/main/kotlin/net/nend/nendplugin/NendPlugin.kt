@@ -8,44 +8,60 @@ import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.BinaryMessenger
 
 class NendPlugin : FlutterPlugin, ActivityAware {
-    private var activity: Activity? = null
-    private var context: Context? = null
-    private var messenger: BinaryMessenger? = null
+    private lateinit var flutterPluginBinding: FlutterPlugin.FlutterPluginBinding
 
-    override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
+    override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
+        this.flutterPluginBinding = binding
         flutterPluginBinding.platformViewRegistry.registerViewFactory(
             "nend_plugin/banner",
-            BannerAdFactory(flutterPluginBinding.binaryMessenger)
+            BannerAdFactory(binding.applicationContext, binding.binaryMessenger)
         )
-        context = flutterPluginBinding.applicationContext
-        messenger = flutterPluginBinding.binaryMessenger
-        AdLogger(messenger)
+        AdLogger(binding.binaryMessenger)
     }
 
-    override fun onDetachedFromEngine(p0: FlutterPlugin.FlutterPluginBinding) {
-        context = null
-        messenger = null
+    override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
-        activity = binding.activity
-        InterstitialAd(activity, context, messenger)
-        RewardedVideoAd(activity, context, messenger)
-        InterstitialVideoAd(activity, context, messenger)
+        InterstitialAd(
+            binding.activity,
+            flutterPluginBinding.applicationContext,
+            flutterPluginBinding.binaryMessenger
+        )
+        RewardedVideoAd(
+            binding.activity,
+            flutterPluginBinding.applicationContext,
+            flutterPluginBinding.binaryMessenger
+        )
+        InterstitialVideoAd(
+            binding.activity,
+            flutterPluginBinding.applicationContext,
+            flutterPluginBinding.binaryMessenger
+        )
     }
 
     override fun onDetachedFromActivityForConfigChanges() {
     }
 
     override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
-        activity = binding.activity
-        InterstitialAd(activity, context, messenger)
-        RewardedVideoAd(activity, context, messenger)
-        InterstitialVideoAd(activity, context, messenger)
+        InterstitialAd(
+            binding.activity,
+            flutterPluginBinding.applicationContext,
+            flutterPluginBinding.binaryMessenger
+        )
+        RewardedVideoAd(
+            binding.activity,
+            flutterPluginBinding.applicationContext,
+            flutterPluginBinding.binaryMessenger
+        )
+        InterstitialVideoAd(
+            binding.activity,
+            flutterPluginBinding.applicationContext,
+            flutterPluginBinding.binaryMessenger
+        )
     }
 
     override fun onDetachedFromActivity() {
-        activity = null
     }
 
     companion object {

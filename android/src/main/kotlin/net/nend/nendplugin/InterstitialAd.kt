@@ -20,7 +20,7 @@ import org.json.JSONObject
 class InterstitialAd(
     private val activity: Activity?,
     private val context: Context?,
-    messenger: BinaryMessenger?
+    messenger: BinaryMessenger
 ) : MethodChannel.MethodCallHandler, AdBridger(), NendAdInterstitial.OnClickListener {
 
     override val methodChannel =
@@ -33,10 +33,17 @@ class InterstitialAd(
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (targetMethod(call.method)) {
-            MethodName.LoadAd -> loadAd(call.arguments())
-            MethodName.ShowAd -> showAd(call.arguments())
+            MethodName.LoadAd, MethodName.ShowAd,MethodName.EnableAutoReload -> {
+                call.arguments<JSONObject?>()?.let {
+                    when (targetMethod(call.method)) {
+                        MethodName.LoadAd -> loadAd(it)
+                        MethodName.ShowAd -> showAd(it)
+                        MethodName.EnableAutoReload -> enableAutoReload(it)
+                        else -> {}
+                    }
+                }
+            }
             MethodName.DismissAd -> dismissAd()
-            MethodName.EnableAutoReload -> enableAutoReload(call.arguments())
             else -> {
                 return result.notImplemented()
             }

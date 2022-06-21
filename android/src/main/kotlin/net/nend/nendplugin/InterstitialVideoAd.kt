@@ -11,12 +11,13 @@ import net.nend.android.NendAdVideo
 import net.nend.android.NendAdVideoActionListener
 import net.nend.android.NendAdVideoPlayingStateListener
 import net.nend.android.NendAdVideoType
+import org.json.JSONObject
 import java.util.Locale
 
 class InterstitialVideoAd(
     activity: Activity?,
     private val context: Context?,
-    messenger: BinaryMessenger?
+    messenger: BinaryMessenger
 ) : MethodChannel.MethodCallHandler, VideoAd<NendAdInterstitialVideo>(activity) {
 
     override val methodChannel =
@@ -29,16 +30,20 @@ class InterstitialVideoAd(
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (targetMethod(call.method)) {
             MethodName.InitAd -> {
-                val adUnit = AdUnit.fromArguments(call.arguments())
-                initAd(adUnit)
-                result.success(true)
+                call.arguments<JSONObject?>()?.let {
+                    val adUnit = AdUnit.fromArguments(it)
+                    initAd(adUnit)
+                    result.success(true)
+                }
             }
             MethodName.AddFallbackFullboard -> {
-                val adUnit = AdUnit.fromArguments(call.arguments())
-                adUnit?.let { (spotId, apiKey) ->
-                    video?.addFallbackFullboard(spotId, apiKey)
+                call.arguments<JSONObject?>()?.let {
+                    val adUnit = AdUnit.fromArguments(it)
+                    adUnit?.let { (spotId, apiKey) ->
+                        video?.addFallbackFullboard(spotId, apiKey)
+                    }
+                    result.success(true)
                 }
-                result.success(true)
             }
             MethodName.MuteStartPlaying -> {
                 call.argument<Boolean?>("muteStartPlaying")?.let {

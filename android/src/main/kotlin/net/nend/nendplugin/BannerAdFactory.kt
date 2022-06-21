@@ -6,9 +6,10 @@ import io.flutter.plugin.common.StandardMessageCodec
 import io.flutter.plugin.platform.PlatformView
 import io.flutter.plugin.platform.PlatformViewFactory
 
-class BannerAdFactory(private val messenger: BinaryMessenger) :
+class BannerAdFactory(private val pluginContext: Context, private val messenger: BinaryMessenger) :
     PlatformViewFactory(StandardMessageCodec.INSTANCE) {
-    override fun create(context: Context, viewId: Int, args: Any?): PlatformView {
-        return BannerAd(context, messenger, viewId)
+    override fun create(context: Context?, viewId: Int, args: Any?): PlatformView {
+        val nonNullContext = context?: pluginContext
+        return BannerAd(nonNullContext, messenger, viewId)
     }
 }

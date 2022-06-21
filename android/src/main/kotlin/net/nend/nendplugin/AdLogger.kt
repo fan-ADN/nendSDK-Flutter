@@ -7,7 +7,7 @@ import io.flutter.plugin.common.MethodChannel
 import net.nend.android.NendAdLogger
 import org.json.JSONObject
 
-class AdLogger(messenger: BinaryMessenger?) : MethodChannel.MethodCallHandler, AdBridger() {
+class AdLogger(messenger: BinaryMessenger) : MethodChannel.MethodCallHandler, AdBridger() {
 
     override val methodChannel =
         MethodChannel(messenger, "nend_plugin/ad_logger", JSONMethodCodec.INSTANCE)
@@ -18,7 +18,7 @@ class AdLogger(messenger: BinaryMessenger?) : MethodChannel.MethodCallHandler, A
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (targetMethod(call.method)) {
-            MethodName.SetLogLevel -> setLogLevel(call.arguments())
+            MethodName.SetLogLevel -> call.arguments<JSONObject?>()?.let{ setLogLevel(it) }
             else -> result.notImplemented()
         }
         result.success(true)

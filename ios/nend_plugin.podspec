@@ -15,9 +15,8 @@ A new Flutter plugin that bridging nendSDK.
   s.source_files = 'Classes/**/*'
   s.public_header_files = 'Classes/**/*.h'
   s.dependency 'Flutter'
-  s.dependency 'NendSDK_iOS', '~> 7.2.0'
+  s.dependency 'NendSDK_iOS', '~> 7.3.0'
   s.static_framework = true
 
   s.ios.deployment_target = '9.0'
 end
-

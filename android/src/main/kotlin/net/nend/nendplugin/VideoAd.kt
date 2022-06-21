@@ -21,7 +21,11 @@ abstract class VideoAd<Ad : NendAdVideo>(private val activity: Activity?) : AdBr
             MethodName.ReleaseAd -> video?.releaseAd()
             MethodName.MediationName -> video?.setMediationName(call.argument("mediationName"))
             MethodName.UserId -> video?.setUserId(call.argument("userId"))
-            MethodName.UserFeature -> video?.setUserFeature(generateUserFeatureFrom(call.arguments()))
+            MethodName.UserFeature -> {
+                call.arguments<JSONObject?>()?.let {
+                    video?.setUserFeature(generateUserFeatureFrom(it))
+                }
+            }
             else -> return
         }
         result.success(true)

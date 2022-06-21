@@ -41,7 +41,11 @@ class BannerAd(private val context: Context, messenger: BinaryMessenger, private
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (targetMethod(call.method)) {
-            MethodName.LoadAd -> loadAd(call.arguments())
+            MethodName.LoadAd -> {
+                call.arguments<JSONObject?>()?.let {
+                    loadAd(it)
+                }
+            }
             MethodName.ShowAd -> showAd()
             MethodName.HideAd -> hideAd()
             MethodName.Resume -> nendAdView?.run { resume() }
