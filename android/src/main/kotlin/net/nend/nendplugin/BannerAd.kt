@@ -99,32 +99,29 @@ class BannerAd(private val context: Context, messenger: BinaryMessenger, private
     }
 
     private fun registerListener() {
+        var isReloaded = false
         nendAdView?.setListener(object : NendAdInformationListener {
             override fun onReceiveAd(p0: NendAdView) {
-                nendAdView?.let {
+                if (!isReloaded) {
                     methodChannel.invokeListenerEvent(CallbackName.OnLoaded, null)
+                    isReloaded = true
                 }
+                methodChannel.invokeListenerEvent(CallbackName.OnReceiveAd, null)
             }
 
             override fun onFailedToReceiveAd(p0: NendAdView) {
                 val errorCode = p0.nendError.code - 840
                 val message = p0.nendError.message
                 println("error $errorCode: $message")
-                nendAdView?.let {
-                    methodChannel.invokeListenerEvent(CallbackName.OnFailedToLoad, null)
-                }
+                methodChannel.invokeListenerEvent(CallbackName.OnFailedToLoad, null)
             }
 
             override fun onClick(p0: NendAdView) {
-                nendAdView?.let {
-                    methodChannel.invokeListenerEvent(CallbackName.OnAdClicked, null)
-                }
+                methodChannel.invokeListenerEvent(CallbackName.OnAdClicked, null)
             }
 
             override fun onInformationButtonClick(p0: NendAdView) {
-                nendAdView?.let {
-                    methodChannel.invokeListenerEvent(CallbackName.OnInformationClicked, null)
-                }
+                methodChannel.invokeListenerEvent(CallbackName.OnInformationClicked, null)
             }
 
             override fun onDismissScreen(p0: NendAdView) {

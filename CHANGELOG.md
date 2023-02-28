@@ -1,3 +1,7 @@
+## 1.0.5
+- Update Environment Flutter SDK version
+- Bugfix: Not calling `onReceived()` when an ad loaded.
+
 ## 1.0.4
 - Bump up nendSDK_iOS to 7.4.0.
 - Bump up nendSDK_Android to 9.0.0.

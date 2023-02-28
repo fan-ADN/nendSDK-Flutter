@@ -82,6 +82,7 @@ abstract class VideoAd {
   }
 
   /// Set up features of user.
+  @Deprecated("This method will be deleted in the future")
   set userFeature(UserFeature feature) {
     NendPlugin.invokeMethod(channel: channel, method: 'userFeature', argument: {
       'userFeature': {

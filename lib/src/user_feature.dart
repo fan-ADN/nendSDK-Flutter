@@ -1,4 +1,5 @@
 /// This class is optional to set the user features on video ads.
+@Deprecated("This class will be deleted in the future")
 class UserFeature {
   Gender gender = Gender.unknown;
   int age = -1;

@@ -60,6 +60,7 @@ abstract class AdBridger {
         OnCompleted,
         OnRewarded,
         OnFailedToShow,
+        OnReceiveAd,
         OnDetectedVideoType,
         // Specific definitions are above here.
     }

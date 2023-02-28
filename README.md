@@ -11,7 +11,7 @@
 Add this to your package's `pubspec.yaml` file and execute `flutter pub get`:
 ```Dart
 dependencies:
-  nend_plugin: ^1.0.4
+  nend_plugin: ^1.0.5
 ```
 ## Preparation
 Go to [nend admin page](https://www.nend.net/admin/login). Create ad space and obtain **apiKey**, **spotId**.
@@ -286,6 +286,7 @@ If can not display the InterstitialVideoAd for reasons such as out of stock, can
 In order to use this function, you need to register ad space of fullscreen ads separately on nend console.
 
 ### About UserFeature
+**On iOS, you cannot use these optional functions. And on Android, you also won't use them in the future.**
 User Feature can be used for targeting of video ads.
 Able to use the following features.
 - Age
@@ -398,6 +399,7 @@ rewardedVideo.userFeature = feature;
 ```
 
 ### About UserFeature
+**On iOS, you cannot use these optional functions. And on Android, you also won't use them in the future.**
 User Feature can be used for targeting of video ads.
 Able to use the following features.
 - Age
