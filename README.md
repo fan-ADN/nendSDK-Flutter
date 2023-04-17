@@ -11,7 +11,7 @@
 Add this to your package's `pubspec.yaml` file and execute `flutter pub get`:
 ```Dart
 dependencies:
-  nend_plugin: ^1.0.5
+  nend_plugin: ^2.0.0
 ```
 ## Preparation
 Go to [nend admin page](https://www.nend.net/admin/login). Create ad space and obtain **apiKey**, **spotId**.
@@ -274,36 +274,11 @@ interstitialVideoAd.addFallbackFullboard(spotId: spotId, apiKey: apiKey);
 // The default value is true.
 interstitialVideoAd.muteStartPlaying = false;
 
-// Can set the user id.
-interstitialVideoAd.userId = 'test';
-
-// Set up features of user.
-interstitialVideoAd.userFeature = feature;
 ```
 
 ### About the addFallbackFullboard.
 If can not display the InterstitialVideoAd for reasons such as out of stock, can display fullscreen ads instead.  
 In order to use this function, you need to register ad space of fullscreen ads separately on nend console.
-
-### About UserFeature
-**On iOS, you cannot use these optional functions. And on Android, you also won't use them in the future.**
-User Feature can be used for targeting of video ads.
-Able to use the following features.
-- Age
-- BirthDay
-- Gender
-- Others: could be customized from own your app.
-
-```Dart
-ad.userFeature = UserFeature()
-  ..gender = Gender.female
-  ..age = 39
-  ..setBirthday(1913, 2, 28)
-  ..customBooleanParams['booleanParamKey'] = true
-  ..customStringParams['stringParamKey'] = 'test'
-  ..customIntegerParams['integerParamKey'] = 3
-  ..customDoubleParams['doubleParamKey'] = 20.43;
-```
 
 ### InterstitialVideoAd Event Handling
 To handle event, You can add InterstitialVideoAdListener by using `setEventListener` method.
@@ -389,33 +364,6 @@ await rewardedVideo.releaseAd();
 // Set the event listener.
 rewardedVideo.setEventListener(_interstitialAdListener());
 
-// Option
-
-// Can set the user id.
-rewardedVideo.userId = 'test';
-
-// Set up features of user.
-rewardedVideo.userFeature = feature;
-```
-
-### About UserFeature
-**On iOS, you cannot use these optional functions. And on Android, you also won't use them in the future.**
-User Feature can be used for targeting of video ads.
-Able to use the following features.
-- Age
-- BirthDay
-- Gender
-- Others: could be customized from own your app.
-
-```Dart
-ad.userFeature = UserFeature()
-  ..gender = Gender.female
-  ..age = 39
-  ..setBirthday(1913, 2, 28)
-  ..customBooleanParams['booleanParamKey'] = true
-  ..customStringParams['stringParamKey'] = 'test'
-  ..customIntegerParams['integerParamKey'] = 3
-  ..customDoubleParams['doubleParamKey'] = 20.43;
 ```
 
 ### RewardedVideoAd Event Handling

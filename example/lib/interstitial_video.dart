@@ -102,15 +102,6 @@ class _InterstitialVideoSampleState extends State<InterstitialVideoSample> {
     ad.setEventListener(_interstitialAdListener());
 
     ad.mediationName = 'mediationName';
-    ad.userId = 'userId';
-    ad.userFeature = UserFeature()
-      ..gender = Gender.female
-      ..age = 39
-      ..setBirthday(1913, 2, 28)
-      ..customBooleanParams['booleanParamKey'] = true
-      ..customStringParams['stringParamKey'] = 'Hoge Fuga'
-      ..customIntegerParams['integerParamKey'] = 3
-      ..customDoubleParams['doubleParamKey'] = 20.43;
   }
 
   Future<void> loadFallbackFullboard() async {

@@ -49,5 +49,5 @@ android {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'net.nend.android:nend-sdk:9.0.0'
+    implementation 'net.nend.android:nend-sdk:9.0.1'
 }

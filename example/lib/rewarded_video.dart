@@ -78,15 +78,6 @@ class _RewardedVideoSampleState extends State<RewardedVideoSample> {
     rewardedVideoAd.setEventListener(_rewardedVideoAdListener());
 
     rewardedVideoAd.mediationName = 'mediationName';
-    rewardedVideoAd.userId = 'userId';
-    rewardedVideoAd.userFeature = UserFeature()
-      ..gender = Gender.female
-      ..age = 39
-      ..setBirthday(1913, 2, 28)
-      ..customBooleanParams['booleanParamKey'] = true
-      ..customStringParams['stringParamKey'] = 'Hoge Fuga'
-      ..customIntegerParams['integerParamKey'] = 3
-      ..customDoubleParams['doubleParamKey'] = 20.43;
   }
 
   RewardedVideoAdListener _rewardedVideoAdListener() {

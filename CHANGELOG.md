@@ -1,3 +1,21 @@
+## 2.0.0
+- Bump up nendSDK_iOS to 8.0.1.
+- Bump up nendSDK_Android to 9.0.1.
+- Removed UserID, UserFeature on video ads.
+  - Removed method
+    - video.dart
+        - userId(String value)
+        - userFeature(UserFeature feature)
+  - Removed class
+    - UserFeature
+      - gender
+      - age
+      - setBirthday(int year, int month, int day)
+      - customBooleanParams['booleanParamKey']
+      - customStringParams['stringParamKey']
+      - customIntegerParams['integerParamKey']
+      - customDoubleParams['doubleParamKey']
+
 ## 1.0.5
 - Update Environment Flutter SDK version
 - Bugfix: Not calling `onReceived()` when an ad loaded.

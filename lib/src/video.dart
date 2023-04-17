@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 
 import 'nend_plugin.dart';
-import 'user_feature.dart';
 
 /// An abstract class of VideoAd.
 abstract class VideoAd {
@@ -70,31 +69,6 @@ abstract class VideoAd {
       method: 'mediationName',
       argument: {'mediationName': value},
     );
-  }
-
-  /// Can set the user id.
-  set userId(String value) {
-    NendPlugin.invokeMethod(
-      channel: channel,
-      method: 'userId',
-      argument: {'userId': value},
-    );
-  }
-
-  /// Set up features of user.
-  @Deprecated("This method will be deleted in the future")
-  set userFeature(UserFeature feature) {
-    NendPlugin.invokeMethod(channel: channel, method: 'userFeature', argument: {
-      'userFeature': {
-        'gender': feature.gender.index,
-        'age': feature.age,
-        'birthday': feature.birthday,
-        'customStringParams': feature.customStringParams,
-        'customIntegerParams': feature.customIntegerParams,
-        'customDoubleParams': feature.customDoubleParams,
-        'customBooleanParams': feature.customBooleanParams
-      }
-    });
   }
 
   /// This method runs after the ad loads and then you can get the type of video by accessing [videoType].

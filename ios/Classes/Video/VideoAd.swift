@@ -20,10 +20,6 @@ class VideoAd: AdBridger {
             case .releaseAd: video.releaseAd()
             case .mediationName:
                 video.mediationName = videoCodable(from: call.arguments)?.mediationName ?? ""
-            case .userId:
-                video.userId = videoCodable(from: call.arguments)?.userId ?? ""
-            case .userFeature:
-                video.userFeature = generateFeature(from: videoCodable(from: call.arguments))
             default:
                 return
         }
@@ -54,50 +50,5 @@ class VideoAd: AdBridger {
             print(error)
         }
         return nil
-    }
-    
-    func generateFeature(from videoCodable: VideoCodable?) -> NADUserFeature {
-        let feature = NADUserFeature()
-        guard let args = videoCodable, let featureJson = args.userFeature else {
-            return feature
-        }
-        if let age = featureJson.age {
-            feature.age = age
-        }
-        if let gender = featureJson.gender {
-            switch gender {
-            case NADGender.male.rawValue:
-                feature.gender = NADGender.male
-            case NADGender.female.rawValue:
-                feature.gender = NADGender.female
-            default:
-                break
-            }
-        }
-        if let birthday = featureJson.birthday {
-            feature.setBirthdayWithYear(birthday.year, month: birthday.month, day: birthday.day)
-        }
-        if let customDoubleParams = featureJson.customDoubleParams {
-            customDoubleParams.forEach({
-                feature.addCustomDoubleValue($0.value, forKey: $0.key)
-            })
-        }
-        if let customStringParams = featureJson.customStringParams {
-            customStringParams.forEach({
-                feature.addCustomStringValue($0.value, forKey: $0.key)
-            })
-        }
-        if let customIntegerParams = featureJson.customIntegerParams {
-            customIntegerParams.forEach({
-                feature.addCustomIntegerValue($0.value, forKey: $0.key)
-            })
-        }
-        if let customBooleanParams = featureJson.customBooleanParams {
-            customBooleanParams.forEach({
-                feature.addCustomBoolValue($0.value, forKey: $0.key)
-            })
-        }
-
-        return feature
     }
 }

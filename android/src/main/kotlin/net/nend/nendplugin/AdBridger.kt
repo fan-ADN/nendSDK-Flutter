@@ -33,8 +33,6 @@ abstract class AdBridger {
 
         IsReady,
         MediationName,
-        UserId,
-        UserFeature,
         AddFallbackFullboard,
         EnableAutoReload,
         DismissAd,

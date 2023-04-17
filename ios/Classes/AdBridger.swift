@@ -40,8 +40,6 @@ class AdBridger: NSObject {
 
         isReady,
         mediationName,
-        userId,
-        userFeature,
         addFallbackFullboard,
         enableAutoReload,
         dismissAd,
