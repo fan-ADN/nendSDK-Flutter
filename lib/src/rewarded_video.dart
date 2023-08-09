@@ -5,17 +5,19 @@ import 'video.dart';
 
 /// Create a RewardedVideoAd.
 class RewardedVideoAd extends VideoAd {
-  static const tag = 'NendAdRewardedVideo';
-
   factory RewardedVideoAd({required int spotId, required String apiKey}) {
-    return _rewardedVideo ??= RewardedVideoAd._(
+    return _rewardedVideo ??= RewardedVideoAd.create(
       spotId: spotId,
       apiKey: apiKey,
+      methodChannel:  MethodChannel(
+        'nend_plugin/NendAdRewardedVideo',
+        JSONMethodCodec()
+      )
     );
   }
 
-  RewardedVideoAd._({required int spotId, required String apiKey}) {
-    adType = tag;
+  RewardedVideoAd.create({required int spotId, required String apiKey, required MethodChannel methodChannel}) {
+    this.methodChannel = methodChannel;
     init(spotId: spotId, apiKey: apiKey);
   }
 
@@ -28,7 +30,7 @@ class RewardedVideoAd extends VideoAd {
   }
 
   void setEventListener(RewardedVideoAdListener listener) {
-    channel.setMethodCallHandler(
+    this.methodChannel.setMethodCallHandler(
       (call) => _handler(listener: listener, call: call),
     );
   }

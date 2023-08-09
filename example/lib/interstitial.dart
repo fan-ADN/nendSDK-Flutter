@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import 'package:nend_plugin/nend_plugin.dart';
 
+void main() => runApp(InterstitialSample());
+
 class InterstitialSample extends StatefulWidget {
   @override
   _InterstitialSampleState createState() => _InterstitialSampleState();
@@ -12,12 +14,22 @@ class InterstitialSample extends StatefulWidget {
 class _InterstitialSampleState extends State<InterstitialSample> {
   late InterstitialAd _interstitial;
 
+  int loadCnt = 0;
+  int showCnt = 0;
+  int failedToLoadCnt = 0;
+  int failedToShowCnt = 0;
+  int infoClickCnt = 0;
+  int clickCnt = 0;
+  int closeCnt = 0;
+
   int get spotId => Platform.isAndroid ? 213206 : 213208;
+
   String get apiKey => Platform.isAndroid
       ? '8c278673ac6f676dae60a1f56d16dad122e23516'
       : '308c2499c75c4a192f03c02b2fcebd16dcb45cc9';
 
   int get spotId2 => Platform.isAndroid ? 213206 : 213208;
+
   String get apiKey2 => Platform.isAndroid
       ? '8c278673ac6f676dae60a1f56d16dad122e23516'
       : '308c2499c75c4a192f03c02b2fcebd16dcb45cc9';
@@ -33,7 +45,8 @@ class _InterstitialSampleState extends State<InterstitialSample> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return MaterialApp(
+        home: Scaffold(
       appBar: AppBar(
         title: const Text('Interstitial example'),
       ),
@@ -88,29 +101,76 @@ class _InterstitialSampleState extends State<InterstitialSample> {
             Text('Step 3: Tap to Show button'),
             Text('Step 4: Wait for a few seconds'),
             Text('Step 5: Will be closed interstitial Ads to automatically'),
+            SizedBox(
+              height: 10,
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Interstitial Ad Listener Counter",
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                Text("onLoaded: $loadCnt"),
+                Text("onShown: $showCnt"),
+                Text("onFailedToLoad: $failedToLoadCnt"),
+                Text("onFailedToShow: $failedToShowCnt"),
+                Text("onInformationClicked:$infoClickCnt"),
+                Text("onAdClicked: $clickCnt"),
+                Text("onClosed: $closeCnt"),
+              ],
+            ),
+            SizedBox(
+              height: 10,
+            ),
           ],
         ),
       ),
-    );
+    ));
   }
 
   InterstitialAdListener _listener() {
     return InterstitialAdListener(
       onShown: (Object? arg) {
         print((arg as Map)['result']);
+        setState(() {
+          showCnt++;
+        });
       },
       onFailedToShow: (Object? arg) {
         print((arg as Map)['result']);
+        setState(() {
+          failedToShowCnt++;
+        });
       },
       onLoaded: (Object? arg) {
         print((arg as Map)['result']);
+        setState(() {
+          loadCnt++;
+        });
       },
       onFailedToLoad: (Object? arg) {
         print((arg as Map)['result']);
+        setState(() {
+          failedToLoadCnt++;
+        });
       },
-      onAdClicked: () => print('onAdClicked'),
-      onInformationClicked: () => print('onInformationClicked'),
-      onClosed: () => print('onClosed'),
+      onAdClicked: () => {
+        print('onAdClicked'),
+        setState(() {
+          clickCnt++;
+        })
+      },
+      onInformationClicked: () => {
+        print('onInformationClicked'),
+        setState(() {
+          infoClickCnt++;
+        })
+      },
+      onClosed: () => {
+        print('onClosed'),
+        setState(() {
+          closeCnt++;
+        })
+      },
     );
   }
 }

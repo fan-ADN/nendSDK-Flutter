@@ -101,11 +101,14 @@ class _BannerAdState extends State<BannerAd> {
   }
 
   void _onPlatformViewCreated(id) {
+    final methodChannel =
+        MethodChannel('nend_plugin/banner/$id', JSONMethodCodec());
+
     final controller = BannerAdController(
-      viewId: id,
+      methodChannel: methodChannel,
       adjustSize: widget.adjustSize,
     );
-    controller.channel.setMethodCallHandler((call) => _handler(call));
+    controller.methodChannel.setMethodCallHandler((call) => _handler(call));
     widget.onCreated.call(controller);
   }
 
@@ -151,22 +154,16 @@ class _BannerAdState extends State<BannerAd> {
 /// Controls a BannerAd.
 class BannerAdController {
   BannerAdController({
-    required this.viewId,
+    required this.methodChannel,
     required this.adjustSize,
   });
 
-  ///  The viewId is the PlatformView's unique identifier.
-  final int viewId;
+  final MethodChannel methodChannel;
 
   /// If adjustSize is true, the BannerAd is scaled automatically.
   /// It will be calculated in the width ratio of 320(up to 1.5).
   /// This argument default false.
   final bool adjustSize;
-
-  late final channel = MethodChannel(
-    'nend_plugin/banner/$viewId',
-    JSONMethodCodec(),
-  );
 
   final String className = 'NendAdView';
 
@@ -176,7 +173,7 @@ class BannerAdController {
     required String apiKey,
   }) async {
     NendPlugin.invokeMethod(
-      channel: channel,
+      channel: methodChannel,
       method: NendPlugin.method_name_load_ad,
       argument: {
         'adjustSize': adjustSize,
@@ -191,7 +188,7 @@ class BannerAdController {
   /// Show the BannerAd.
   Future<void> show() async {
     await NendPlugin.invokeMethod(
-      channel: channel,
+      channel: methodChannel,
       method: NendPlugin.method_name_show_ad,
     );
   }
@@ -199,25 +196,27 @@ class BannerAdController {
   /// Hide the BannerAd.
   Future<void> hide() async {
     await NendPlugin.invokeMethod(
-      channel: channel,
+      channel: methodChannel,
       method: NendPlugin.method_name_hide_ad,
     );
   }
 
   /// Resume periodical loading for the BannerAd.
   Future<void> resume() async {
-    await NendPlugin.invokeMethod(channel: channel, method: 'resume');
+    await NendPlugin.invokeMethod(
+        channel: methodChannel, method: NendPlugin.method_name_resume_ad);
   }
 
   /// Pause periodical loading for the BannerAd.
   Future<void> pause() async {
-    await NendPlugin.invokeMethod(channel: channel, method: 'pause');
+    await NendPlugin.invokeMethod(
+        channel: methodChannel, method: NendPlugin.method_name_pause_ad);
   }
 
   /// Dispose of the BannerAd.
   Future<void> dispose() async {
     await NendPlugin.invokeMethod(
-      channel: channel,
+      channel: methodChannel,
       method: NendPlugin.method_name_release_ad,
     );
   }
@@ -239,6 +238,13 @@ class BannerSize {
   static const BannerSize type300x250 = BannerSize(width: 300, height: 250);
 
   static const BannerSize type728x90 = BannerSize(width: 728, height: 90);
+
+  @override
+  bool operator ==(Object other) =>
+      other is BannerSize && other.width == width && other.height == height;
+
+  @override
+  int get hashCode => width.hashCode & height.hashCode;
 }
 
 /// Can receive these events for the BannerAd.

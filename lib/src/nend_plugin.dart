@@ -14,6 +14,9 @@ class NendPlugin {
   static const method_name_show_ad = 'showAd';
   static const method_name_hide_ad = 'hideAd';
   static const method_name_dismiss_ad = 'dismissAd';
+  static const method_name_enable_auto_reload = 'enableAutoReload';
+  static const method_name_resume_ad = 'resume';
+  static const method_name_pause_ad = 'pause';
 
   static Future<T?> invokeMethod<T>({
     required MethodChannel channel,

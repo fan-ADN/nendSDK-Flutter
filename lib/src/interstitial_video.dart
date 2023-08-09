@@ -5,17 +5,19 @@ import 'video.dart';
 
 /// Create a InterstitialVideoAd.
 class InterstitialVideoAd extends VideoAd {
-  static const tag = 'NendAdInterstitialVideo';
-
   factory InterstitialVideoAd({required int spotId, required String apiKey}) {
-    return _interstitialVideo ??= InterstitialVideoAd._(
-      spotId: spotId,
-      apiKey: apiKey,
-    );
+    return _interstitialVideo ??= InterstitialVideoAd.create(
+        spotId: spotId,
+        apiKey: apiKey,
+        methodChannel: MethodChannel(
+            'nend_plugin/NendAdInterstitialVideo', JSONMethodCodec()));
   }
 
-  InterstitialVideoAd._({required int spotId, required String apiKey}) {
-    adType = tag;
+  InterstitialVideoAd.create(
+      {required int spotId,
+      required String apiKey,
+      required MethodChannel methodChannel}) {
+    this.methodChannel = methodChannel;
     init(spotId: spotId, apiKey: apiKey);
   }
 
@@ -34,7 +36,7 @@ class InterstitialVideoAd extends VideoAd {
     required String apiKey,
   }) async {
     await NendPlugin.invokeMethod(
-      channel: channel,
+      channel: methodChannel,
       method: 'addFallbackFullboard',
       argument: {
         NendPlugin.key_spot_id: spotId,
@@ -47,14 +49,14 @@ class InterstitialVideoAd extends VideoAd {
   /// The default value is true.
   set muteStartPlaying(bool muteStartPlaying) {
     NendPlugin.invokeMethod(
-      channel: channel,
+      channel: methodChannel,
       method: 'muteStartPlaying',
       argument: {'muteStartPlaying': muteStartPlaying},
     );
   }
 
   void setEventListener(InterstitialVideoAdListener listener) {
-    channel.setMethodCallHandler(
+    methodChannel.setMethodCallHandler(
       (call) => _handler(listener: listener, call: call),
     );
   }

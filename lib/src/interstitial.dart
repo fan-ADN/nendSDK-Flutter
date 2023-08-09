@@ -4,17 +4,19 @@ import 'nend_plugin.dart';
 /// Create a InterstitialAd.
 /// This class implemented with a singleton pattern.
 class InterstitialAd {
+  MethodChannel methodChannel;
+
+  InterstitialAd.create({required this.methodChannel});
+
+  static InterstitialAd? _interstitialAd;
+
   factory InterstitialAd() {
-    return _interstitialAd;
+    return _interstitialAd ??= InterstitialAd.create(
+        methodChannel: MethodChannel('nend_plugin/interstitial', JSONMethodCodec()));
   }
 
-  InterstitialAd._();
-  static final InterstitialAd _interstitialAd = InterstitialAd._();
-
-  final channel = MethodChannel('nend_plugin/interstitial', JSONMethodCodec());
-
   void setEventListener(InterstitialAdListener listener) {
-    channel.setMethodCallHandler(
+    methodChannel.setMethodCallHandler(
       (call) => _handler(listener: listener, call: call),
     );
   }
@@ -22,7 +24,7 @@ class InterstitialAd {
   /// Load the InterstitialAd.
   Future<void> loadAd({required int spotId, required String apiKey}) async {
     await NendPlugin.invokeMethod(
-      channel: channel,
+      channel: methodChannel,
       method: NendPlugin.method_name_load_ad,
       argument: {
         NendPlugin.key_spot_id: spotId,
@@ -35,7 +37,7 @@ class InterstitialAd {
   /// Need the spotId of the loaded InterstitialAd.
   Future<void> showAd({required int spotId}) async {
     await NendPlugin.invokeMethod(
-      channel: channel,
+      channel: methodChannel,
       method: NendPlugin.method_name_show_ad,
       argument: {
         NendPlugin.key_spot_id: spotId,
@@ -46,7 +48,7 @@ class InterstitialAd {
   /// Dismiss the InterstitialAd.
   Future<void> dismissAd() async {
     NendPlugin.invokeMethod(
-      channel: channel,
+      channel: methodChannel,
       method: NendPlugin.method_name_dismiss_ad,
     );
   }
@@ -55,8 +57,8 @@ class InterstitialAd {
   /// This default value is true.
   Future<void> enableAutoReload({required bool isEnabled}) async {
     NendPlugin.invokeMethod(
-      channel: channel,
-      method: 'enableAutoReload',
+      channel: methodChannel,
+      method: NendPlugin.method_name_enable_auto_reload,
       argument: {'enableAutoReload': isEnabled},
     );
   }
@@ -131,7 +133,7 @@ class InterstitialAdListener {
   /// onShown: (Object? arg) {
   ///   print((arg as Map)['result']);
   /// },
-  /// ``` 
+  /// ```
   final AdEventCallBackUseArgument? onShown;
 
   /// Called when display failed.
@@ -151,7 +153,7 @@ class InterstitialAdListener {
   /// onLoaded: (Object? arg) {
   ///   print((arg as Map)['result']);
   /// },
-  /// ``` 
+  /// ```
   final AdEventCallBackUseArgument? onLoaded;
 
   /// Called when load failed.

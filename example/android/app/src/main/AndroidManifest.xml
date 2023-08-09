@@ -18,7 +18,8 @@
          FlutterApplication and put your custom class here. -->
     <application
         android:label="nend_plugin_example"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:name="androidx.multidex.MultiDexApplication">
         <activity
             android:name=".MainActivity"
             android:exported="true"

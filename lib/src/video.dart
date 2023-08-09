@@ -6,11 +6,7 @@ import 'nend_plugin.dart';
 
 /// An abstract class of VideoAd.
 abstract class VideoAd {
-  late String adType;
-  late final channel = MethodChannel(
-    'nend_plugin/$adType',
-    JSONMethodCodec(),
-  );
+  late MethodChannel methodChannel;
   VideoType videoType = VideoType.unknown;
 
   Map adUnit(int spotId, String apiKey) {
@@ -23,7 +19,7 @@ abstract class VideoAd {
   /// Can confirm if the VideoAd can play the video.
   Future<bool> isReady() async {
     return await NendPlugin.invokeMethod<bool>(
-          channel: channel,
+          channel: methodChannel,
           method: 'isReady',
         ) ??
         false;
@@ -32,7 +28,7 @@ abstract class VideoAd {
   // Init the VideoAd.
   Future<void> init({required int spotId, required String apiKey}) async {
     await NendPlugin.invokeMethod(
-      channel: channel,
+      channel: methodChannel,
       method: 'initAd',
       argument: adUnit(spotId, apiKey),
     );
@@ -41,7 +37,7 @@ abstract class VideoAd {
   /// Load the VideoAd.
   Future<void> loadAd() async {
     await NendPlugin.invokeMethod(
-      channel: channel,
+      channel: methodChannel,
       method: NendPlugin.method_name_load_ad,
     );
   }
@@ -49,7 +45,7 @@ abstract class VideoAd {
   /// Show the VideoAd.
   Future<void> showAd() async {
     await NendPlugin.invokeMethod(
-      channel: channel,
+      channel: methodChannel,
       method: NendPlugin.method_name_show_ad,
     );
   }
@@ -57,7 +53,7 @@ abstract class VideoAd {
   /// Release the VideoAd.
   Future<void> releaseAd() async {
     await NendPlugin.invokeMethod(
-      channel: channel,
+      channel: methodChannel,
       method: NendPlugin.method_name_release_ad,
     );
   }
@@ -65,7 +61,7 @@ abstract class VideoAd {
   /// Can set the mediation name.
   set mediationName(String value) {
     NendPlugin.invokeMethod(
-      channel: channel,
+      channel: methodChannel,
       method: 'mediationName',
       argument: {'mediationName': value},
     );

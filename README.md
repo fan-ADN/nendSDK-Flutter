@@ -11,7 +11,7 @@
 Add this to your package's `pubspec.yaml` file and execute `flutter pub get`:
 ```Dart
 dependencies:
-  nend_plugin: ^2.0.0
+  nend_plugin: ^2.0.1
 ```
 ## Preparation
 Go to [nend admin page](https://www.nend.net/admin/login). Create ad space and obtain **apiKey**, **spotId**.
