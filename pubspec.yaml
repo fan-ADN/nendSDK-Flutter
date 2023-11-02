@@ -1,6 +1,6 @@
 name: nend_plugin
 description: nend plugin that shows banner ads, interstitial ads and video ads.
-version: 2.0.1
+version: 2.0.2
 homepage: https://github.com/fan-ADN/nendSDK-Flutter
 
 environment:

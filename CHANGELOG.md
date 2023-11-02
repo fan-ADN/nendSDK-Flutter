@@ -1,3 +1,7 @@
+## 2.0.2
+- Bump up nendSDK_iOS to 8.2.0.
+- Bump up nendSDK_Android to 10.0.0.
+
 ## 2.0.1
 - Bump up nendSDK_iOS to 8.1.0.
 
